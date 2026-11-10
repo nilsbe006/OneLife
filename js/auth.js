@@ -19,7 +19,12 @@ const ERRORS = {
 };
 
 export function errorMessage(err) {
-  return ERRORS[err?.code] || 'Anmeldung fehlgeschlagen. Bitte versuche es erneut.';
+  if (err?.code === 'not-member' && err.uid) {
+    return `${ERRORS['not-member']} Deine UID: ${err.uid} – sie muss als Dokument-ID in der Collection "members" stehen.`;
+  }
+  if (ERRORS[err?.code]) return ERRORS[err.code];
+  console.warn('Login-Fehler', err);
+  return `Anmeldung fehlgeschlagen (${err?.code || err?.message || 'unbekannt'}).`;
 }
 
 export async function login(email, password, remember = true) {
@@ -47,9 +52,10 @@ export function watchSession(cb) {
       const me = { uid: user.uid, email: user.email, ...meSnap.data() };
       cb({ user, me, members, friend: members.find((m) => m.uid !== user.uid) || null });
     } catch (err) {
+      console.warn('Freischaltung fehlgeschlagen', err);
       const code = err.code === 'permission-denied' ? 'not-member' : err.code;
       await signOut(auth);
-      cb({ error: errorMessage({ code }) });
+      cb({ error: errorMessage({ code, uid: user.uid, message: err.message }) });
     }
   });
 }
