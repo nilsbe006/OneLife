@@ -16,11 +16,15 @@ const ERRORS = {
   'auth/network-request-failed': 'Keine Verbindung. Prüfe dein Internet.',
   'auth/user-disabled': 'Dieser Account wurde deaktiviert.',
   'not-member': 'Dieser Account ist für ONE LIFE nicht freigeschaltet.',
+  'rules-missing': 'Zugriff von der Datenbank verweigert. Sind die Firestore-Regeln aus firebase/firestore.rules veröffentlicht?',
 };
 
 export function errorMessage(err) {
   if (err?.code === 'not-member' && err.uid) {
     return `${ERRORS['not-member']} Deine UID: ${err.uid} – sie muss als Dokument-ID in der Collection "members" stehen.`;
+  }
+  if (err?.code === 'rules-missing' && err.uid) {
+    return `${ERRORS['rules-missing']} (UID: ${err.uid})`;
   }
   if (ERRORS[err?.code]) return ERRORS[err.code];
   console.warn('Login-Fehler', err);
@@ -53,7 +57,9 @@ export function watchSession(cb) {
       cb({ user, me, members, friend: members.find((m) => m.uid !== user.uid) || null });
     } catch (err) {
       console.warn('Freischaltung fehlgeschlagen', err);
-      const code = err.code === 'permission-denied' ? 'not-member' : err.code;
+      // permission-denied beim eigenen Dokument = Regeln fehlen/veraltet;
+      // Dokument nicht vorhanden = UID steht nicht in "members"
+      const code = err.code === 'permission-denied' ? 'rules-missing' : err.code;
       await signOut(auth);
       cb({ error: errorMessage({ code, uid: user.uid, message: err.message }) });
     }

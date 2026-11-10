@@ -17,6 +17,9 @@ service cloud.firestore {
 
     // Allowlist & Profile – werden manuell in der Konsole angelegt
     match /members/{uid} {
+      // Eigenes Dokument immer lesbar -> App kann "nicht in members" von
+      // "Regeln nicht veröffentlicht" unterscheiden
+      allow get: if isMe(uid);
       allow read: if isMember();
       allow update: if isMember() && isMe(uid) && onlyChanges(['displayName', 'avatar']);
       allow create, delete: if false;
