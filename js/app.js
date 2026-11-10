@@ -116,8 +116,9 @@ function render() {
   view.className = `view view-${name}`;
   main.append(view);
   VIEWS[name](view, state.session, params);
+  const navRoute = name === 'results' ? 'finder' : name;
   document.querySelectorAll('.nav a').forEach((a) => {
-    const active = a.dataset.route === name;
+    const active = a.dataset.route === navRoute;
     a.classList.toggle('active', active);
     if (active) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });

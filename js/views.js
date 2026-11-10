@@ -1,13 +1,11 @@
 // Ansichten der App. Jede View bekommt den Container und den Session-Kontext.
 import { CONFIG } from './config.js';
+import { esc, initials } from './util.js';
+import { finderView, resultsView } from './finder.js';
+
+export { esc, initials };
 
 const IMG = (id, w = 1200) => `https://images.unsplash.com/${id}?w=${w}&q=70&auto=format&fit=crop`;
-
-export const esc = (str = '') => String(str).replace(/[&<>"']/g, (c) => ({
-  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
-
-export const initials = (name = '?') => (name.trim()[0] || '?').toUpperCase();
 
 function home(el, { me, friend }) {
   const myName = esc(me.displayName || 'Abenteurer');
@@ -74,7 +72,8 @@ function placeholder(title, lead, note) {
 
 export const VIEWS = {
   home,
-  finder: placeholder('Adventure Finder', 'Beantworte ein paar Fragen und finde euer nächstes Abenteuer.', 'Der Entscheidungsassistent wird in Phase 3 gebaut.'),
+  finder: finderView,
+  results: resultsView,
   all: placeholder('Alle Abenteuer', 'Die komplette Bucketlist.', 'Die Aktivitäten-Datenbank folgt in Phase 4.'),
   favorites: placeholder('Favoriten', 'Alles, was ihr mit einem Herz markiert habt.', 'Favoriten und Matches folgen in Phase 5.'),
   completed: placeholder('Erledigt', 'Eure gemeinsame Abenteuer-Bilanz.', 'Status und Fortschritt folgen in Phase 5.'),

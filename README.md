@@ -16,3 +16,9 @@ Setup- und Deployment-Anleitung folgt in Phase 8.
 python3 -m http.server 8000
 # http://localhost:8000
 ```
+
+## Tests
+
+```bash
+node --test tests/
+```
