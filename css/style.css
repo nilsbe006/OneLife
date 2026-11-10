@@ -1,0 +1,15 @@
+:root {
+  --bg: #0b1410;
+  --surface: #141c18;
+  --green-900: #0f2a1f;
+  --green-700: #1f4d3a;
+  --accent: #8fd694;
+  --text: #eef3ef;
+  --muted: #9aa8a0;
+  --radius: 18px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.boot { min-height: 100dvh; display: grid; place-content: center; text-align: center; padding: 16px; }
+.boot h1 { font-size: clamp(2.2rem, 8vw, 5rem); letter-spacing: .04em; margin: 0; }
+.boot p { color: var(--muted); }
