@@ -3,8 +3,9 @@
 //   ratings/{uid}_{activityId}   -> { uid, activityId, rating 0–5, favorite, updatedAt }
 //   activityState/{activityId}   -> { status: open|planned|done, updatedBy, updatedAt, doneAt }
 //   comments/{autoId}            -> { activityId, uid, body, createdAt }
+//   suggestions/{autoId}         -> { fromUid, toUid, activityId, message, proposedDate, response, responseNote, createdAt, respondedAt }
 import {
-  collection, doc, setDoc, addDoc, deleteDoc, onSnapshot, serverTimestamp,
+  collection, doc, setDoc, addDoc, deleteDoc, updateDoc, onSnapshot, serverTimestamp, query, where,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { db } from './firebase.js';
 
@@ -12,6 +13,8 @@ const data = {
   ratings: new Map(), // docId -> rating
   states: new Map(), // activityId -> state
   comments: new Map(), // commentId -> comment
+  sugIn: new Map(), // an mich
+  sugOut: new Map(), // von mir
 };
 let me = null;
 let friend = null;
@@ -34,8 +37,8 @@ function emit() {
 /** Wandelt Firestore-Timestamps (oder Mock-Werte) in Millisekunden um. */
 export const millis = (t) => (t?.toMillis ? t.toMillis() : typeof t === 'number' ? t : t ? Date.parse(t) : Date.now());
 
-function watch(name, map, keyOf = (d) => d.id) {
-  return onSnapshot(collection(db, name), (snap) => {
+function watch(name, map, keyOf = (d) => d.id, ref = collection(db, name)) {
+  return onSnapshot(ref, (snap) => {
     map.clear();
     snap.docs.forEach((d) => map.set(keyOf(d), { id: d.id, ...d.data(SNAP) }));
     emit();
@@ -54,6 +57,9 @@ export function startSync(session, { onError } = {}) {
     watch('ratings', data.ratings),
     watch('activityState', data.states),
     watch('comments', data.comments),
+    // Regeln erlauben nur eigene Vorschläge -> Abfragen müssen danach filtern
+    watch('suggestions', data.sugIn, undefined, query(collection(db, 'suggestions'), where('toUid', '==', me))),
+    watch('suggestions', data.sugOut, undefined, query(collection(db, 'suggestions'), where('fromUid', '==', me))),
   ];
 }
 
@@ -63,6 +69,8 @@ export function stopSync() {
   data.ratings.clear();
   data.states.clear();
   data.comments.clear();
+  data.sugIn.clear();
+  data.sugOut.clear();
   me = null;
   friend = null;
 }
@@ -168,8 +176,103 @@ export async function addComment(activityId, body) {
 
 export const deleteComment = (commentId) => deleteDoc(doc(db, 'comments', commentId));
 
-/* ---------- Export (für Backup in Phase 6) ---------- */
+/* ---------- Export ---------- */
 export function snapshotAll() {
   const plain = (m) => [...m.values()].map((v) => JSON.parse(JSON.stringify(v, (k, x) => (x?.toMillis ? new Date(x.toMillis()).toISOString() : x))));
-  return { ratings: plain(data.ratings), activityState: plain(data.states), comments: plain(data.comments) };
+  return {
+    ratings: plain(data.ratings),
+    activityState: plain(data.states),
+    comments: plain(data.comments),
+    suggestions: [...plain(data.sugIn), ...plain(data.sugOut)],
+  };
+}
+
+/* ---------- Vorschläge ---------- */
+export const RESPONSES = ['yes', 'maybe', 'no'];
+export const RESPONSE_LABEL = { pending: 'Offen', yes: 'Bin dabei', maybe: 'Vielleicht', no: 'Lieber nicht' };
+export const MAX_MESSAGE = 500;
+
+const byNewest = (a, b) => millis(b.createdAt) - millis(a.createdAt);
+export const incoming = () => [...data.sugIn.values()].sort(byNewest);
+export const outgoing = () => [...data.sugOut.values()].sort(byNewest);
+export const pendingIncomingCount = () => incoming().filter((x) => x.response === 'pending').length;
+export const suggestionsFor = (activityId) => [...incoming(), ...outgoing()].filter((x) => x.activityId === activityId).sort(byNewest);
+
+export async function suggest(activityId, { message = '', proposedDate = null } = {}) {
+  const uid = requireUser();
+  if (!friend) throw new Error('Kein Freund gefunden');
+  const text = String(message).trim().slice(0, MAX_MESSAGE);
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(proposedDate || '') ? proposedDate : null;
+  await addDoc(collection(db, 'suggestions'), {
+    fromUid: uid,
+    toUid: friend,
+    activityId,
+    message: text,
+    proposedDate: date,
+    response: 'pending',
+    responseNote: '',
+    createdAt: serverTimestamp(),
+    respondedAt: null,
+  });
+}
+
+/** Antwort auf einen Vorschlag. "Bin dabei" setzt den gemeinsamen Status auf "Geplant". */
+export async function respond(suggestionId, response, note = '') {
+  if (!RESPONSES.includes(response)) throw new Error(`Unbekannte Antwort: ${response}`);
+  const sug = data.sugIn.get(suggestionId);
+  await updateDoc(doc(db, 'suggestions', suggestionId), {
+    response,
+    responseNote: String(note).trim().slice(0, MAX_MESSAGE),
+    respondedAt: serverTimestamp(),
+  });
+  if (response === 'yes' && sug && getStatus(sug.activityId).status === 'open') {
+    await setStatus(sug.activityId, 'planned');
+  }
+}
+
+export const withdraw = (suggestionId) => deleteDoc(doc(db, 'suggestions', suggestionId));
+
+/** Rohdaten für den Feed (nur lesend). */
+export const allData = () => ({
+  ratings: [...data.ratings.values()],
+  states: [...data.states.entries()].map(([id, v]) => ({ ...v, activityId: id })),
+  comments: [...data.comments.values()],
+  suggestions: [...data.sugIn.values(), ...data.sugOut.values()],
+});
+
+/* ---------- Import (Backup wiederherstellen) ---------- */
+/**
+ * Stellt fehlende Daten aus einem Export wieder her. Überschreibt nichts, was
+ * bereits existiert, und schreibt nur, was die Regeln erlauben (eigene Bewertungen
+ * und Kommentare, gemeinsamer Status). Gibt eine Zusammenfassung zurück.
+ */
+export async function restoreBackup(backup) {
+  const uid = requireUser();
+  const result = { ratings: 0, states: 0, comments: 0, skipped: 0 };
+  const src = backup?.data || {};
+  for (const r of src.ratings || []) {
+    if (r.uid !== uid || !r.activityId || data.ratings.has(ratingId(uid, r.activityId))) { result.skipped++; continue; }
+    await setDoc(doc(db, 'ratings', ratingId(uid, r.activityId)), {
+      uid, activityId: r.activityId,
+      rating: Math.max(0, Math.min(5, Math.round(Number(r.rating) || 0))),
+      favorite: !!r.favorite,
+      updatedAt: serverTimestamp(),
+    });
+    result.ratings++;
+  }
+  for (const st of src.activityState || []) {
+    const id = st.id || st.activityId;
+    if (!id || !STATUS.includes(st.status) || st.status === 'open' || data.states.has(id)) { result.skipped++; continue; }
+    await setStatus(id, st.status);
+    result.states++;
+  }
+  for (const c of src.comments || []) {
+    if (c.uid !== uid || !c.id || !c.activityId || data.comments.has(c.id) || !String(c.body || '').trim()) { result.skipped++; continue; }
+    await setDoc(doc(db, 'comments', c.id), {
+      activityId: c.activityId, uid, body: String(c.body).slice(0, MAX_COMMENT), createdAt: serverTimestamp(),
+    });
+    result.comments++;
+  }
+  result.skipped += (src.suggestions || []).length; // Vorschläge werden nicht wiederhergestellt
+  return result;
 }

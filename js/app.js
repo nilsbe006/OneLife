@@ -1,7 +1,7 @@
 import { watchSession, login, logout, resetPassword, errorMessage } from './auth.js';
 import { VIEWS, initials } from './views.js';
 import { nav } from './nav.js';
-import { startSync, stopSync, onChange } from './store.js';
+import { startSync, stopSync, onChange, pendingIncomingCount } from './store.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -121,6 +121,7 @@ function render() {
   main.append(view);
   current = VIEWS[name](view, state.session, params) || null;
   const navRoute = { results: 'finder', activity: 'all' }[name] || name;
+  $('#bell').classList.toggle('active', name === 'inbox');
   document.querySelectorAll('.nav a').forEach((a) => {
     const active = a.dataset.route === navRoute;
     a.classList.toggle('active', active);
@@ -133,7 +134,18 @@ window.addEventListener('hashchange', render);
 
 // Live-Updates aus Firestore an die aktuelle Ansicht weitergeben
 let current = null;
-onChange(() => current?.refresh?.());
+onChange(() => {
+  current?.refresh?.();
+  updateBell();
+});
+
+function updateBell() {
+  const n = state.session ? pendingIncomingCount() : 0;
+  const badge = $('#bell-badge');
+  badge.textContent = n > 9 ? '9+' : String(n);
+  badge.hidden = n === 0;
+  $('#bell').setAttribute('aria-label', n ? `Vorschläge – ${n} offen` : 'Vorschläge');
+}
 let syncErrorShown = false;
 
 function renderUser() {

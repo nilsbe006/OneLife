@@ -82,7 +82,11 @@
         </a>
       </nav>
       <div class="topbar-user">
-        <span id="user-chip" class="user-chip"></span>
+        <a href="#/inbox" class="bell" id="bell" aria-label="Vorschläge">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>
+          <span class="bell-badge" id="bell-badge" hidden>0</span>
+        </a>
+        <a href="#/settings" id="user-chip" class="user-chip" aria-label="Einstellungen"></a>
         <button id="logout-btn" class="btn btn-ghost btn-sm" type="button">Logout</button>
       </div>
     </header>

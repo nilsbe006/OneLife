@@ -8,6 +8,7 @@ import { local } from './storage.js';
 import { esc } from './util.js';
 import { nav } from './nav.js';
 import { renderSocial, mountComments } from './social.js';
+import { mountSuggest } from './inbox.js';
 
 const CATS = [
   ['all', 'Alle'], ['adrenaline', 'Action'], ['nature', 'Natur'], ['spontaneous', 'Spontan'],
@@ -146,6 +147,7 @@ export function detailView(el, session, params) {
         <div class="detail-grid">
           <div class="detail-main">
             <section class="social" id="social" aria-label="Eure Bewertung"></section>
+            <section class="suggest-box" id="suggest" aria-label="Vorschlagen"></section>
             <p class="detail-desc">${esc(a.description)}</p>
             <div class="why"><h2>Warum es sich lohnt</h2><p>${esc(a.why)}</p></div>
             ${a.safety ? `<div class="safety" role="note"><strong>Sicherheit:</strong> ${esc(a.safety)}</div>` : ''}
@@ -175,6 +177,7 @@ export function detailView(el, session, params) {
   const socialEl = el.querySelector('#social');
   const comments = mountComments(el.querySelector('#comments'), a.id, session);
   renderSocial(socialEl, a.id, session);
+  const suggestBox = mountSuggest(el.querySelector('#suggest'), a.id, session);
 
   // Zurück: wenn es eine vorherige Seite in der App gibt, dorthin
   el.querySelector('#detail-back').addEventListener('click', (e) => {
@@ -188,6 +191,7 @@ export function detailView(el, session, params) {
     refresh() {
       renderSocial(socialEl, a.id, session);
       comments.refresh();
+      suggestBox.refresh();
     },
   };
 }
