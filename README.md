@@ -5,7 +5,7 @@
 Interaktiver Adventure-Planer für Nils & Johannes: Adventure Finder, gemeinsame Bewertungen, Vorschläge und Matches.
 
 - Frontend: HTML, CSS, Vanilla JS (ES-Module), gehostet auf GitHub Pages
-- Daten & Login: Supabase (Auth + Postgres mit Row Level Security)
+- Daten & Login: Firebase (Authentication + Cloud Firestore mit Security Rules)
 
 Architektur: siehe [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Setup- und Deployment-Anleitung folgt in Phase 8.

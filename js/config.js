@@ -1,8 +1,14 @@
 // Öffentliche Konfiguration. Hier stehen KEINE Passwörter.
-// Supabase-URL und anon/publishable Key sind für den Browser gedacht;
-// der Datenschutz erfolgt über Row Level Security in der Datenbank.
+// Die Firebase-Web-Konfiguration ist laut Firebase für den Browser gedacht;
+// der Datenschutz erfolgt über die Firestore Security Rules.
 export const CONFIG = {
-  supabaseUrl: '',      // wird in Phase 2 eingetragen
-  supabaseAnonKey: '',  // wird in Phase 2 eingetragen
+  firebase: {
+    apiKey: '',
+    authDomain: '',
+    projectId: '',
+    storageBucket: '',
+    messagingSenderId: '',
+    appId: '',
+  }, // wird in Phase 2 eingetragen
   homeBase: { name: 'Ulm', lat: 48.4011, lng: 9.9876 },
 };
