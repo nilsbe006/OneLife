@@ -2,6 +2,7 @@
 import { CONFIG } from './config.js';
 import { esc, initials } from './util.js';
 import { finderView, resultsView } from './finder.js';
+import { allView, detailView } from './catalog.js';
 
 export { esc, initials };
 
@@ -74,7 +75,8 @@ export const VIEWS = {
   home,
   finder: finderView,
   results: resultsView,
-  all: placeholder('Alle Abenteuer', 'Die komplette Bucketlist.', 'Die Aktivitäten-Datenbank folgt in Phase 4.'),
+  all: allView,
+  activity: detailView,
   favorites: placeholder('Favoriten', 'Alles, was ihr mit einem Herz markiert habt.', 'Favoriten und Matches folgen in Phase 5.'),
   completed: placeholder('Erledigt', 'Eure gemeinsame Abenteuer-Bilanz.', 'Status und Fortschritt folgen in Phase 5.'),
 };

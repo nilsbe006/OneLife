@@ -5,6 +5,9 @@ import {
 } from './quiz.js';
 import { loadQuiz, saveQuiz, resetQuiz } from './storage.js';
 import { esc } from './util.js';
+import { ACTIVITIES } from './activities.js';
+import { rank } from './filter.js';
+import { cardGrid } from './cards.js';
 
 const go = (hash) => { location.hash = hash; };
 const notices = {}; // questionId -> [Hinweise zu automatisch entfernten Antworten]
@@ -185,27 +188,45 @@ export function resultsView(el, session) {
     location.replace('#/finder/1');
     return;
   }
+  const { perfect, alternatives } = rank(ACTIVITIES, quiz.answers, new Date());
+  const showAlternatives = perfect.length < 3 && alternatives.length > 0;
+
   el.innerHTML = `
     <section class="container">
       <header class="page-head">
-        <p class="eyebrow">Euer Abenteuer-Profil</p>
-        <h1 class="display page-title">Deine Auswahl</h1>
-        <p class="page-lead">Tippe auf eine Antwort, um sie zu ändern.</p>
+        <p class="eyebrow">Adventure Finder</p>
+        <h1 class="display page-title">Eure Vorschläge</h1>
+        <p class="page-lead" id="results-lead">${perfect.length
+          ? `${perfect.length} ${perfect.length === 1 ? 'Abenteuer passt' : 'Abenteuer passen'} zu deinen Antworten – die besten zuerst.`
+          : 'Kein Abenteuer erfüllt gerade alle deine Kriterien. Hier sind die nächstbesten Alternativen – mit Begründung.'}</p>
       </header>
-      <ul class="profile" id="profile">
-        ${QUESTIONS.map((q, i) => `
-          <li>
-            <a class="profile-item${isAnswered(quiz.answers[q.id]) ? '' : ' is-empty'}" href="#/finder/${i + 1}/edit" data-q="${q.id}">
-              <span class="profile-key">${esc(q.short)}</span>
-              <span class="profile-val">${esc(answerLabel(q.id, quiz.answers[q.id]))}</span>
-              <span class="profile-edit" aria-hidden="true">Ändern</span>
-            </a>
-          </li>`).join('')}
-      </ul>
-      <div class="empty results-pending" id="results-list">
-        <strong>Vorschläge folgen in Phase 4</strong>
-        <p>Sobald die Aktivitäten-Datenbank steht, siehst du hier passende Abenteuer, sortiert nach deinen Antworten.</p>
+
+      <details class="profile-box" open>
+        <summary>Deine Antworten <span class="muted">– tippen zum Ändern</span></summary>
+        <ul class="profile" id="profile">
+          ${QUESTIONS.map((q, i) => `
+            <li>
+              <a class="profile-item${isAnswered(quiz.answers[q.id]) ? '' : ' is-empty'}" href="#/finder/${i + 1}/edit" data-q="${q.id}">
+                <span class="profile-key">${esc(q.short)}</span>
+                <span class="profile-val">${esc(answerLabel(q.id, quiz.answers[q.id]))}</span>
+                <span class="profile-edit" aria-hidden="true">Ändern</span>
+              </a>
+            </li>`).join('')}
+        </ul>
+      </details>
+
+      <div id="results-list">
+        ${perfect.length ? `
+          <h2 class="section-sub">Passt perfekt <span class="count">${perfect.length}</span></h2>
+          ${cardGrid(perfect)}` : ''}
+        ${showAlternatives ? `
+          <h2 class="section-sub" id="alt-head">${perfect.length ? 'Knapp daneben' : 'Nächstbeste Alternativen'} <span class="count">${alternatives.length}</span></h2>
+          <p class="muted">Diese Abenteuer verfehlen ein oder zwei deiner Kriterien – was nicht passt, steht auf der Karte.</p>
+          ${cardGrid(alternatives)}` : ''}
+        ${!perfect.length && !showAlternatives ? `
+          <div class="empty"><strong>Leider nichts in der Nähe</strong><p>Deine Kombination ist sehr streng. Lockere Budget, Entfernung oder Zeitpunkt.</p></div>` : ''}
       </div>
+
       <div class="intro-actions">
         <a class="btn btn-ghost" href="#/all">Alle Abenteuer anzeigen</a>
         <button class="btn btn-ghost" type="button" id="results-restart">Finder neu starten</button>

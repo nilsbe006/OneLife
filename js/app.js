@@ -1,5 +1,6 @@
 import { watchSession, login, logout, resetPassword, errorMessage } from './auth.js';
 import { VIEWS, initials } from './views.js';
+import { nav } from './nav.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -110,13 +111,14 @@ function currentRoute() {
 function render() {
   if (!state.session) return;
   const { name, params } = currentRoute();
+  nav.depth += 1;
   const main = $('#main');
   main.innerHTML = '';
   const view = document.createElement('div');
   view.className = `view view-${name}`;
   main.append(view);
   VIEWS[name](view, state.session, params);
-  const navRoute = name === 'results' ? 'finder' : name;
+  const navRoute = { results: 'finder', activity: 'all' }[name] || name;
   document.querySelectorAll('.nav a').forEach((a) => {
     const active = a.dataset.route === navRoute;
     a.classList.toggle('active', active);
