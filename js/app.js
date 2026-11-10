@@ -1,4 +1,5 @@
 import { watchSession, login, logout, resetPassword, errorMessage } from './auth.js';
+import { VIEWS, initials } from './views.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -21,8 +22,6 @@ export function toast(message, ms = 2600) {
   clearTimeout(toast.timer);
   toast.timer = setTimeout(() => { el.hidden = true; }, ms);
 }
-
-export const initials = (name = '?') => name.trim().slice(0, 1).toUpperCase();
 
 /* ---------- Login ---------- */
 const form = $('#login-form');
@@ -101,17 +100,36 @@ $('#logout-btn').addEventListener('click', async () => {
   toast('Bis zum nächsten Abenteuer!');
 });
 
-/* ---------- App ---------- */
-function renderApp() {
+/* ---------- App & Router ---------- */
+// Hash-Routing (#/finder …) funktioniert auf GitHub Pages ohne Server-Konfiguration.
+function currentRoute() {
+  const [name = '', ...params] = location.hash.replace(/^#\/?/, '').split('/');
+  return { name: VIEWS[name] ? name : 'home', params };
+}
+
+function render() {
+  if (!state.session) return;
+  const { name, params } = currentRoute();
+  const main = $('#main');
+  main.innerHTML = '';
+  const view = document.createElement('div');
+  view.className = `view view-${name}`;
+  main.append(view);
+  VIEWS[name](view, state.session, params);
+  document.querySelectorAll('.nav a').forEach((a) => {
+    const active = a.dataset.route === name;
+    a.classList.toggle('active', active);
+    if (active) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+  window.scrollTo(0, 0);
+}
+
+window.addEventListener('hashchange', render);
+
+function renderUser() {
   const { me } = state.session;
   $('#user-chip').innerHTML = `<span class="avatar">${initials(me.displayName)}</span><span class="user-name"></span>`;
   $('#user-chip .user-name').textContent = me.displayName || me.email;
-  $('#main').innerHTML = `
-    <section class="container" style="padding-top:48px">
-      <p class="eyebrow">Eingeloggt</p>
-      <h1 class="display" style="font-size:3rem">Hallo <span id="hello-name"></span></h1>
-    </section>`;
-  $('#hello-name').textContent = me.displayName || '';
 }
 
 watchSession((session) => {
@@ -126,6 +144,7 @@ watchSession((session) => {
     show('login');
     return;
   }
-  renderApp();
+  renderUser();
   show('app');
+  render();
 });
