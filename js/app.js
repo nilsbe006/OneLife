@@ -1,6 +1,7 @@
 import { watchSession, login, logout, resetPassword, errorMessage } from './auth.js';
 import { VIEWS, initials } from './views.js';
 import { nav } from './nav.js';
+import { startSync, stopSync, onChange } from './store.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -97,6 +98,7 @@ $('#login-reset').addEventListener('click', async () => {
 });
 
 $('#logout-btn').addEventListener('click', async () => {
+  stopSync();
   await logout();
   toast('Bis zum nächsten Abenteuer!');
 });
@@ -117,7 +119,7 @@ function render() {
   const view = document.createElement('div');
   view.className = `view view-${name}`;
   main.append(view);
-  VIEWS[name](view, state.session, params);
+  current = VIEWS[name](view, state.session, params) || null;
   const navRoute = { results: 'finder', activity: 'all' }[name] || name;
   document.querySelectorAll('.nav a').forEach((a) => {
     const active = a.dataset.route === navRoute;
@@ -128,6 +130,11 @@ function render() {
 }
 
 window.addEventListener('hashchange', render);
+
+// Live-Updates aus Firestore an die aktuelle Ansicht weitergeben
+let current = null;
+onChange(() => current?.refresh?.());
+let syncErrorShown = false;
 
 function renderUser() {
   const { me } = state.session;
@@ -144,9 +151,21 @@ watchSession((session) => {
   }
   state.session = session;
   if (!session) {
+    stopSync();
+    current = null;
     show('login');
     return;
   }
+  syncErrorShown = false;
+  startSync(session, {
+    onError: (err) => {
+      if (syncErrorShown) return;
+      syncErrorShown = true;
+      toast(err?.code === 'permission-denied'
+        ? 'Daten konnten nicht geladen werden – sind die Firestore-Regeln veröffentlicht?'
+        : 'Verbindung zur Datenbank unterbrochen.', 5000);
+    },
+  });
   renderUser();
   show('app');
   render();

@@ -3,6 +3,7 @@ import { CONFIG } from './config.js';
 import { esc, initials } from './util.js';
 import { finderView, resultsView } from './finder.js';
 import { allView, detailView } from './catalog.js';
+import { favoritesView, completedView } from './lists.js';
 
 export { esc, initials };
 
@@ -54,29 +55,12 @@ function home(el, { me, friend }) {
     </section>`;
 }
 
-function placeholder(title, lead, note) {
-  return (el) => {
-    el.innerHTML = `
-      <section class="container">
-        <header class="page-head">
-          <h1 class="display page-title">${title}</h1>
-          <p class="page-lead">${lead}</p>
-        </header>
-        <div class="empty">
-          <strong>Kommt gleich</strong>
-          <p>${note}</p>
-          <a href="#/" class="btn btn-ghost btn-sm">Zur Startseite</a>
-        </div>
-      </section>`;
-  };
-}
-
 export const VIEWS = {
   home,
   finder: finderView,
   results: resultsView,
   all: allView,
   activity: detailView,
-  favorites: placeholder('Favoriten', 'Alles, was ihr mit einem Herz markiert habt.', 'Favoriten und Matches folgen in Phase 5.'),
-  completed: placeholder('Erledigt', 'Eure gemeinsame Abenteuer-Bilanz.', 'Status und Fortschritt folgen in Phase 5.'),
+  favorites: favoritesView,
+  completed: completedView,
 };

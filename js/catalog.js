@@ -7,6 +7,7 @@ import { card, badges, adrenalineDots } from './cards.js';
 import { local } from './storage.js';
 import { esc } from './util.js';
 import { nav } from './nav.js';
+import { renderSocial, mountComments } from './social.js';
 
 const CATS = [
   ['all', 'Alle'], ['adrenaline', 'Action'], ['nature', 'Natur'], ['spontaneous', 'Spontan'],
@@ -98,6 +99,7 @@ export function allView(el, session) {
   }
   el.querySelector('#cat-sort').addEventListener('change', (e) => { f.sort = e.target.value; update(); });
   update();
+  return { refresh: update };
 }
 
 /* ---------- #/activity/:id ---------- */
@@ -143,6 +145,7 @@ export function detailView(el, session, params) {
           a.image.source ? ` · <a href="${esc(a.image.source)}" target="_blank" rel="noopener">Quelle</a>` : ''}</p>
         <div class="detail-grid">
           <div class="detail-main">
+            <section class="social" id="social" aria-label="Eure Bewertung"></section>
             <p class="detail-desc">${esc(a.description)}</p>
             <div class="why"><h2>Warum es sich lohnt</h2><p>${esc(a.why)}</p></div>
             ${a.safety ? `<div class="safety" role="note"><strong>Sicherheit:</strong> ${esc(a.safety)}</div>` : ''}
@@ -155,6 +158,7 @@ export function detailView(el, session, params) {
                   <p class="muted">~${c.driveMin} min ab Ulm · <a href="${esc(c.url)}" target="_blank" rel="noopener">Infos</a></p>
                 </li>`).join('')}</ul>` : ''}
             ${a.equipment.length ? `<h2 class="h2">Ausrüstung</h2><ul class="equip">${a.equipment.map((e) => `<li>${esc(e)}</li>`).join('')}</ul>` : ''}
+            <section class="comments-wrap" id="comments"></section>
           </div>
           <aside class="detail-side">
             <dl class="facts">${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
@@ -168,6 +172,10 @@ export function detailView(el, session, params) {
       </div>
     </article>`;
 
+  const socialEl = el.querySelector('#social');
+  const comments = mountComments(el.querySelector('#comments'), a.id, session);
+  renderSocial(socialEl, a.id, session);
+
   // Zurück: wenn es eine vorherige Seite in der App gibt, dorthin
   el.querySelector('#detail-back').addEventListener('click', (e) => {
     if (nav.depth > 1) {
@@ -175,4 +183,11 @@ export function detailView(el, session, params) {
       history.back();
     }
   });
+
+  return {
+    refresh() {
+      renderSocial(socialEl, a.id, session);
+      comments.refresh();
+    },
+  };
 }
