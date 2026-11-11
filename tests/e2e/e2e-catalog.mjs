@@ -35,12 +35,23 @@ for (const [name, opts] of [['mobile', devices['iPhone 13']], ['desktop', { view
   // Bild-Links (einmal reicht)
   if (!checkedImages) {
     const srcs = await page.$$eval('.card img', (imgs) => [...new Set(imgs.map((i) => i.src))]);
-    let broken = [];
+    const broken = [];
+    const throttled = [];
     for (const src of srcs) {
-      const r = await page.request.get(src);
-      if (!r.ok()) broken.push(`${r.status()} ${src}`);
+      // Wikimedia drosselt viele schnelle Abfragen (429) – dann kurz warten und erneut versuchen
+      let r;
+      for (let attempt = 0; attempt < 4; attempt++) {
+        r = await page.request.get(src);
+        if (r.status() !== 429) break;
+        await page.waitForTimeout(3000 * (attempt + 1));
+      }
+      if (r.status() === 429) throttled.push(src);
+      else if (!r.ok()) broken.push(`${r.status()} ${src}`);
+      await page.waitForTimeout(150);
     }
-    check(broken.length === 0, `Alle ${srcs.length} Bild-URLs erreichbar ${broken.join(' | ')}`);
+    check(broken.length === 0, `Keine kaputten Bild-URLs (${srcs.length - throttled.length} geprüft) ${broken.join(' | ')}`);
+    // 429 = Wikimedia drosselt den automatisierten Test-Browser; das sagt nichts über den Link aus
+    if (throttled.length) console.log(`HINWEIS  ${throttled.length} Bilder wegen Drosselung (429) nicht geprüft – später erneut testen`);
     checkedImages = true;
   }
 

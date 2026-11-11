@@ -27,7 +27,6 @@ Die Hintergrundbilder von Login und Startseite sowie die Bildkarten im Adventure
 | Lasertag (Symbolbild) | Sgt. Ida Irby / Wikimedia Commons, Public domain | [Quelle](https://commons.wikimedia.org/wiki/File:Fort_Bliss_laser_tag_120705-A-WO769-023.jpg) | Outdoor-Lasertag in Staig |
 | Eisbaden (Symbolbild) | Marek Ślusarczyk (Tupungato) Photo portfolio / Wikimedia Commons, CC BY 3.0 | [Quelle](https://commons.wikimedia.org/wiki/File:011_Morsowanie_-_ice_swimming_in_winter_recreation_activity_in_Poland.jpg) | Eisbaden an einem offiziellen Badesee |
 | Windkanal beim Indoor Skydiving (Symbolbild) | BrokenSphere / Wikimedia Commons, CC BY-SA 3.0 | [Quelle](https://commons.wikimedia.org/wiki/File:IFLY_Hollywood_4.JPG) | Indoor Skydiving im Windkanal |
-| Spielbank Lindau | Gerhard Giebener / Wikimedia Commons, CC BY 2.0 | [Quelle](https://commons.wikimedia.org/wiki/File:Spielbank_Lindau_(3)_(9542790594).jpg) | Casinoabend in der Spielbank Lindau |
 | Starzlachklamm bei Sonthofen | Jan Czeczotka / Wikimedia Commons, CC BY-SA 4.0 | [Quelle](https://commons.wikimedia.org/wiki/File:Starzlach-Klamm_N%C3%A4he_Sonthofen.jpg) | Startseite / Finder |
 | Wanderer im Tal (Symbolbild) | Unsplash (Symbolbild) | [Unsplash](https://unsplash.com) | Startseite / Finder |
 | Blick aus dem Zelt (Symbolbild) | Unsplash (Symbolbild) | [Unsplash](https://unsplash.com) | Startseite / Finder |
@@ -54,4 +53,4 @@ Die Hintergrundbilder von Login und Startseite sowie die Bildkarten im Adventure
 | Reiseplanung mit Karte und Pass (Symbolbild) | Unsplash (Symbolbild) | [Unsplash](https://unsplash.com) | Startseite / Finder |
 | Hügelketten im Dunst (Symbolbild) | Unsplash (Symbolbild) | [Unsplash](https://unsplash.com) | Startseite / Finder |
 | Wald im Gegenlicht (Symbolbild) | Unsplash (Symbolbild) | [Unsplash](https://unsplash.com) | Startseite / Finder |
-| Neonlichter bei Nacht (Symbolbild) | Unsplash (Symbolbild) | [Unsplash](https://unsplash.com) | Startseite / Finder |
+| Neonlichter bei Nacht (Symbolbild) | Unsplash (Symbolbild) | [Unsplash](https://unsplash.com) | Casinoabend im Casino Bregenz |

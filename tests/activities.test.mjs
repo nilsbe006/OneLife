@@ -100,3 +100,11 @@ test('Canyoning, Fallschirm und Tandemflug nur mit Guide', () => {
     assert.equal(ACTIVITIES.find((a) => a.id === id).guideRequired, true, id);
   }
 });
+
+test('Casinoabend ist ab 18 möglich (Casino Bregenz, Österreich)', () => {
+  const c = ACTIVITIES.find((a) => a.id === 'casinoabend');
+  assert.equal(c.minAge, 18);
+  assert.equal(c.country, 'AT');
+  assert.match(c.name, /Bregenz/);
+  assert.ok(c.equipment.some((e) => /ausweis|reisepass/i.test(e)));
+});

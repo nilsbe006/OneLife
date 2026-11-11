@@ -112,3 +112,10 @@ test('"Unter 30 €" ist exklusiv', () => {
   assert.equal(kw.perfect, false);
   assert.match(kw.hard[0].reason, /statt unter 30 €/);
 });
+
+test('"Ganz Deutschland" schließt das Casino in Bregenz aus, "Auch Österreich" nicht', () => {
+  const casino = ACTIVITIES.find((a) => a.id === 'casinoabend');
+  assert.equal(evaluate(casino, { distance: 'de' }, JULY).perfect, false);
+  assert.equal(evaluate(casino, { distance: 'eu' }, JULY).perfect, true);
+  assert.equal(evaluate(casino, { distance: '120' }, JULY).perfect, true);
+});
