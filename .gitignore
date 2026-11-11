@@ -6,3 +6,4 @@ node_modules/
 # Niemals Secret-Keys committen
 *.secret.*
 tests/e2e/shots/
+trailer/
