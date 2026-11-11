@@ -825,3 +825,6 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .dest-meta { font-size: .85rem; color: var(--muted); }
 .dest-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .trip-cta { margin-bottom: 10px; }
+
+/* Mobile-Feinschliff: größere Tippfläche für den Avatar-Link */
+.user-chip { min-height: 44px; min-width: 44px; justify-content: center; padding: 0 4px; border-radius: 999px; }
