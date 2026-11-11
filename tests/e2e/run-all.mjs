@@ -19,7 +19,10 @@ const server = http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
   fs.createReadStream(file).pipe(res);
 });
-await new Promise((r) => server.listen(PORT, r));
+// Mit BASE=<url> laufen die Tests gegen eine bestehende Seite (z. B. GitHub Pages) statt gegen den lokalen Server
+const BASE = process.env.BASE || `http://localhost:${PORT}/`;
+if (!process.env.BASE) await new Promise((r) => server.listen(PORT, r));
+console.log(`Teste gegen ${BASE}`);
 
 const out = path.join(here, 'shots');
 fs.mkdirSync(out, { recursive: true });
@@ -30,7 +33,7 @@ for (const f of files) {
   // asynchron starten, damit der Server in diesem Prozess weiter antworten kann
   const r = await new Promise((resolve) => {
     const child = spawn(process.execPath, [path.join(here, f)], {
-      cwd: here, env: { ...process.env, BASE: `http://localhost:${PORT}/`, OUT: out },
+      cwd: here, env: { ...process.env, BASE, OUT: out },
     });
     let stdout = '';
     let stderr = '';
@@ -43,6 +46,6 @@ for (const f of files) {
   console.log(`${ok ? '✔' : '✖'} ${f}`);
   if (!ok) console.log((r.stdout + r.stderr).split('\n').filter((l) => /FAIL|Error/.test(l)).slice(0, 10).join('\n'));
 }
-server.close();
+if (server.listening) server.close();
 console.log(failed ? `\n${failed} von ${files.length} Testdateien fehlgeschlagen` : `\nAlle ${files.length} Testdateien bestanden`);
 process.exit(failed ? 1 : 0);

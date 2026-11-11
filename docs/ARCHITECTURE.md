@@ -1,6 +1,6 @@
 # ONE LIFE. NO LIMITS. – Technische Architektur
 
-Stand: Phase 1 (Analyse & Architektur) – Backend: **Firebase**
+Stand: Phase 8 – fertig umgesetzt. Backend: **Firebase**. Einrichtung & Deployment: siehe [README](../README.md).
 
 ## 1. Anpassungen gegenüber dem ursprünglichen Prompt
 
@@ -75,31 +75,12 @@ Die Regeln liegen versioniert in `firebase/firestore.rules` und werden in der Ko
 
 ## 7. Dateistruktur
 
-```
-/
-├── index.html                 Single-Page-App
-├── css/style.css              Design-Tokens, Komponenten, Responsive
-├── js/
-│   ├── config.js              Firebase-Web-Konfiguration (öffentlich, kein Geheimnis)
-│   ├── firebase.js            Initialisierung von App, Auth, Firestore
-│   ├── app.js                 Start, Hash-Router, View-Wechsel
-│   ├── auth.js                Login / Logout / Session / Passwort-Reset
-│   ├── activities.js          Aktivitätenkatalog (statisch)
-│   ├── quiz.js                Fragen & Quiz-UI
-│   ├── filter.js              Filter- & Scoring-Logik (pure functions)
-│   ├── storage.js             Datenzugriff Firestore + LocalStorage, Export/Import
-│   ├── ui.js                  Karten, Detailansicht, Sterne, Toasts
-│   └── trip.js                Blind-Trip-Planer
-├── firebase/
-│   └── firestore.rules        Security Rules
-├── assets/images/
-├── tests/
-├── docs/ARCHITECTURE.md
-├── README.md
-└── .gitignore
-```
+Die aktuelle Dateistruktur mit Beschreibung jeder Datei steht in der [README](../README.md#projektstruktur). Gegenüber der ursprünglichen Planung kamen hinzu: `store.js` (Firestore-Sync), `social.js`, `lists.js`, `inbox.js`, `feed.js`, `settings.js`, `cards.js`, `catalog.js`, `images.js`, `trip-view.js`, `nav.js`, `util.js` sowie Browser-Tests unter `tests/e2e/`.
 
-Native ES-Module, kein Build-Schritt. Firebase JS SDK (modular) wird mit **gepinnter Version** von `www.gstatic.com/firebasejs/` geladen. Alle Pfade relativ; Hash-Routing (`#/finder`, `#/activity/wimsener-hoehle`) → kein 404-Problem auf GitHub Pages.
+Ergänzungen am Datenmodell während der Umsetzung:
+- `members/{uid}`: jeder darf sein **eigenes** Dokument lesen (`allow get: if isMe(uid)`), damit die App „nicht freigeschaltet“ von „Regeln fehlen“ unterscheiden kann.
+- `ratings` enthält kein Notizfeld; persönliche Gedanken laufen über den gemeinsamen Kommentar-Thread.
+- Vorschläge werden mit `where('toUid'|'fromUid', '==', uid)` abgefragt, weil die Regeln nur eigene Vorschläge freigeben.
 
 ## 8. Design
 
@@ -107,28 +88,19 @@ Dark Mode, Dunkelgrün (`#0f2a1f`/`#1f4d3a`), Schwarz, Anthrazit, Akzent Moosgr�
 
 Bilder von Unsplash/Pexels mit Bildnachweis, passend zur tatsächlichen Aktivität. Ein Prüfskript testet alle Bild-URLs.
 
-## 9. Phasen & Commits
+## 9. Phasen & Commits (umgesetzt)
 
-| Phase | Inhalt | Commit |
+| Phase | Inhalt | Commits |
 |---|---|---|
-| 1 | Architektur, Grundgerüst | `chore: initialize adventure planner project` |
-| 2 | Design, Login (Firebase Auth), Security Rules, Startseite, Navigation | `feat: implement login with firebase auth`, `feat: create responsive landing page` |
+| 1 | Architektur, Grundgerüst, Wechsel auf Firebase | `chore: initialize adventure planner project`, `docs: switch backend from supabase to firebase` |
+| 2 | Login, Security Rules, Startseite, Navigation | `feat: implement login with firebase auth`, `feat: create responsive landing page`, 2× `fix:` Login-Diagnose |
 | 3 | Adventure Finder | `feat: implement interactive adventure quiz` |
-| 4 | Aktivitätendatenbank (33+), Filterlogik + Tests | `feat: add activity database and filtering` |
-| 5 | Detailansicht, gemeinsame Bewertungen, Favoriten, Status, Kommentare | `feat: create activity detail views`, `feat: add shared ratings, favorites and comments` |
-| 6 | Vorschläge, Matches, Feed; Export/Import | `feat: add suggestions and matches`, `feat: add data export and import` |
-| 7 | Blind-Trip-Planer, Tests, Mobile-Feinschliff | `feat: add trip planning section`, `style: optimize mobile experience`, `test: validate application functionality` |
-| 8 | README, GitHub Pages | `docs: add setup and deployment instructions` |
+| 4 | Aktivitäten (37), Filterlogik, Katalog, Details | `feat: add activity database and filtering` |
+| 5 | Gemeinsame Bewertungen, Favoriten, Status, Kommentare | `feat: add shared favorites, ratings, comments and status` |
+| 6 | Vorschläge, Feed, Export/Import | `feat: add suggestions, activity feed and data export/import` |
+| 7 | Trip-Planer, Mobile, Tests | `feat: add trip planning section`, `style: optimize mobile experience`, `test: validate application functionality`, `fix: require 'Weiter' button in adventure finder` |
+| 8 | Dokumentation & Deployment | `docs: add setup and deployment instructions` |
 
-## 10. Firebase-Einrichtung (vor Phase 2)
+## 10. Firebase-Einrichtung
 
-1. Firebase-Konsole → Projekt wählen (bestehend oder neu).
-   ⚠️ Bei einem **bestehenden Projekt**: Firestore Security Rules gelten für die gesamte Datenbank. Wenn dort schon andere Daten/Regeln liegen, werden sie durch unsere Regeln ersetzt → dann lieber ein neues Projekt anlegen.
-2. *Build → Authentication → Sign-in method*: **E-Mail/Passwort** aktivieren.
-3. *Authentication → Settings → User actions*: **„Enable create (sign-up)" deaktivieren**.
-4. *Authentication → Settings → Authorized domains*: **`nilsbe006.github.io`** hinzufügen.
-5. *Authentication → Users → Add user*: Accounts für Nils und Johannes anlegen. Die angezeigte **User UID** beider Accounts notieren.
-6. *Build → Firestore Database*: Datenbank erstellen (Standort möglichst `eur3` oder `europe-west3`, Produktionsmodus).
-7. In Firestore Collection `members` anlegen mit zwei Dokumenten, Dokument-ID = jeweilige UID, Feld `displayName` = „Nils" bzw. „Johannes".
-8. *Projekteinstellungen → Allgemein → Meine Apps*: Web-App (`</>`) registrieren und das `firebaseConfig`-Objekt kopieren.
-9. Security Rules aus `firebase/firestore.rules` (kommt in Phase 2) einfügen und veröffentlichen.
+Die Schritt-für-Schritt-Anleitung steht in der [README](../README.md#einrichtung-einmalig).
