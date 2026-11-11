@@ -164,6 +164,7 @@ export function detailView(el, session, params) {
           </div>
           <aside class="detail-side">
             <dl class="facts">${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+            ${a.tripPlanner ? '<a class="btn btn-primary btn-block trip-cta" href="#/trip">✈️ Trip planen</a>' : ''}
             <div class="detail-links">
               ${a.links.map((l) => `<a class="btn btn-ghost btn-block" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`).join('')}
               <a class="btn btn-ghost btn-block" href="${esc(mapsUrl(a))}" target="_blank" rel="noopener">In Google Maps öffnen ↗</a>

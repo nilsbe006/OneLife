@@ -6,6 +6,7 @@ import { allView, detailView } from './catalog.js';
 import { favoritesView, completedView } from './lists.js';
 import { inboxView } from './inbox.js';
 import { settingsView } from './settings.js';
+import { tripView } from './trip-view.js';
 import { buildFeed, timeAgo } from './feed.js';
 import { activityById, ACTIVITIES } from './activities.js';
 import { favoritesOf, idsWithStatus, myUid, friendUid, pendingIncomingCount } from './store.js';
@@ -56,6 +57,9 @@ function home(el, { me, friend }) {
           <a class="tile" href="#/all" style="--img:url('${IMG('photo-1464822759023-fed622ff2c3b', 900)}')">
             <strong>Alle Abenteuer</strong><span>Die komplette Bucketlist</span>
           </a>
+          <a class="tile" href="#/trip" style="--img:url('${IMG('photo-1488085061387-422e29b40080', 900)}')">
+            <strong>Blind-Trip</strong><span>Überraschungsziel ab STR/FDH</span>
+          </a>
         </div>
       </div>
     </section>
@@ -103,4 +107,5 @@ export const VIEWS = {
   completed: completedView,
   inbox: inboxView,
   settings: settingsView,
+  trip: tripView,
 };

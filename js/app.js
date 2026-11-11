@@ -120,7 +120,7 @@ function render() {
   view.className = `view view-${name}`;
   main.append(view);
   current = VIEWS[name](view, state.session, params) || null;
-  const navRoute = { results: 'finder', activity: 'all' }[name] || name;
+  const navRoute = { results: 'finder', activity: 'all', trip: 'home' }[name] || name;
   $('#bell').classList.toggle('active', name === 'inbox');
   document.querySelectorAll('.nav a').forEach((a) => {
     const active = a.dataset.route === navRoute;
