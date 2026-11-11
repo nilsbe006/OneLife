@@ -5,3 +5,4 @@ node_modules/
 .env.*
 # Niemals Secret-Keys committen
 *.secret.*
+tests/e2e/shots/

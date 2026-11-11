@@ -20,5 +20,16 @@ python3 -m http.server 8000
 ## Tests
 
 ```bash
-node --test tests/
+# Unit-Tests (Filterlogik, Datenqualität, Quiz, Trip-Planer) – nur Node nötig
+npm test
+
+# Browser-Tests (Playwright) auf iPhone-, Android-, Tablet- und Desktop-Größe
+npm install
+npx playwright install chromium
+npm run test:e2e            # alle
+npm run test:e2e -- trip    # nur eine Datei
 ```
+
+Die Browser-Tests ersetzen Firebase durch eine Attrappe (`tests/e2e/mock-firebase.mjs`),
+die dieselben Besitzregeln wie `firebase/firestore.rules` prüft. Zwei Tabs teilen sich
+deren „Datenbank“, so werden Live-Updates zwischen Nils und Johannes getestet.
