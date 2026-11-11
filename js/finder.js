@@ -150,31 +150,33 @@ function questionView(el, session, step, editMode) {
   grid.addEventListener('click', (e) => {
     const btn = e.target.closest('.opt');
     if (!btn || btn.disabled) return;
-    const value = btn.dataset.value;
-    commit(toggleOption(question, quiz.answers[question.id], value));
+    // Nur auswählen – weiter geht es immer bewusst über den "Weiter"-Button
+    commit(toggleOption(question, quiz.answers[question.id], btn.dataset.value));
     renderOptions();
-    if (!question.multi) {
-      // Einzelauswahl: kurz Auswahl zeigen, dann automatisch weiter
-      clearTimeout(questionView.auto);
-      questionView.auto = setTimeout(() => {
-        if (location.hash !== `#/finder/${step}${editMode ? '/edit' : ''}`) return;
-        finishIfLast();
-        go(nextHash());
-      }, 320);
-    }
   });
 
-  nextBtn.addEventListener('click', () => {
+  // Schutz gegen Doppelklick: pro Frage wird nur einmal weiternavigiert
+  let leaving = false;
+  function leave() {
+    if (leaving) return;
+    leaving = true;
+    nextBtn.disabled = true;
+    el.querySelector('#quiz-skip').disabled = true;
     finishIfLast();
     go(nextHash());
+  }
+
+  nextBtn.addEventListener('click', () => {
+    if (!isAnswered(quiz.answers[question.id])) return;
+    leave();
   });
 
   el.querySelector('#quiz-skip').addEventListener('click', () => {
+    if (leaving) return;
     quiz.answers = { ...quiz.answers, [question.id]: null };
     if (!quiz.skipped.includes(question.id)) quiz.skipped.push(question.id);
     saveQuiz(uid, quiz);
-    finishIfLast();
-    go(nextHash());
+    leave();
   });
 
   renderOptions();

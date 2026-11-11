@@ -51,10 +51,19 @@ for (const [name, opts] of [['mobile', devices['iPhone 13']], ['desktop', { view
   const w = await page.$eval('.quiz-progress-bar', (e) => e.style.width);
   check(w === '25%', `[${name}] Fortschrittsbalken 25% bei Frage 2 (${w})`);
 
-  // Einzelauswahl springt automatisch weiter
+  // Einzelauswahl springt NICHT automatisch weiter – "Weiter" ist immer nötig
   await opt('hours').click();
+  await page.waitForTimeout(700);
+  check(page.url().endsWith('#/finder/2'), `[${name}] Auswahl allein springt nicht weiter`);
+  check(await page.isEnabled('#quiz-next'), `[${name}] "Weiter" nach Auswahl aktiv`);
+  await opt('halfday').click();
+  await opt('hours').click();
+  check(await page.locator('.opt.selected').count() === 1, `[${name}] Umentscheiden vor "Weiter" möglich`);
+  // Doppelklick auf "Weiter" darf nur eine Frage weitergehen
+  await page.dblclick('#quiz-next');
   await atStep(3);
-  check(true, `[${name}] Einzelauswahl -> automatisch Frage 3`);
+  await page.waitForTimeout(500);
+  check(page.url().endsWith('#/finder/3'), `[${name}] Doppelklick auf "Weiter" überspringt keine Frage`);
 
   // Zurück-Button behält Auswahl
   await page.click('#quiz-back');
@@ -64,6 +73,7 @@ for (const [name, opts] of [['mobile', devices['iPhone 13']], ['desktop', { view
   await atStep(3);
 
   await opt('lt30').click();
+  await page.click('#quiz-next');
   await atStep(4);
   // Empfehlung aus Frage 1 (Natur -> Draußen)
   check((await opt('outdoor').textContent()).includes('Passt gut'), `[${name}] Empfehlung "Passt gut" bei Draußen`);
@@ -84,15 +94,19 @@ for (const [name, opts] of [['mobile', devices['iPhone 13']], ['desktop', { view
   check((await opt('120').textContent()).includes('zu weit'), `[${name}] Grund wird angezeigt`);
   await page.screenshot({ path: `${OUT}/quiz5-${name}.png`, fullPage: true });
   await opt('60').click();
+  await page.click('#quiz-next');
   await atStep(6);
   check((await opt('4').textContent()).includes('Passt gut'), `[${name}] Adrenalin-Empfehlung durch Frage 1`);
   await opt('4').click();
+  await page.click('#quiz-next');
   await atStep(7);
   await opt('now').click();
+  await page.click('#quiz-next');
   await atStep(8);
   check(await opt('big').isDisabled(), `[${name}] "Große Vorbereitung" gesperrt bei heute/morgen`);
   check((await page.textContent('#quiz-next')).includes('Vorschläge zeigen'), `[${name}] Letzte Frage: Button "Vorschläge zeigen"`);
   await opt('none').click();
+  await page.click('#quiz-next');
   await page.waitForSelector('.profile');
   check(page.url().endsWith('#/results'), `[${name}] Nach Frage 8 -> Profil/Ergebnisse`);
 
@@ -107,6 +121,7 @@ for (const [name, opts] of [['mobile', devices['iPhone 13']], ['desktop', { view
   await page.click('.profile-item[data-q="duration"]');
   await atStep(2, '/edit');
   await opt('day').click();
+  await page.click('#quiz-next');
   await page.waitForSelector('.profile');
   check((await page.textContent('#profile')).includes('Ein ganzer Tag'), `[${name}] Ändern aus Profil -> zurück zum Profil`);
 
@@ -114,10 +129,12 @@ for (const [name, opts] of [['mobile', devices['iPhone 13']], ['desktop', { view
   await page.click('.profile-item[data-q="distance"]');
   await atStep(5, '/edit');
   await opt('180').click();
+  await page.click('#quiz-next');
   await page.waitForSelector('.profile');
   await page.click('.profile-item[data-q="duration"]');
   await atStep(2, '/edit');
   await opt('hours').click();
+  await page.click('#quiz-next');
   await page.waitForSelector('.profile');
   const toastText = await page.textContent('#toast');
   check(toastText.includes('Entfernung'), `[${name}] Toast erklärt angepasste Entfernung`);
